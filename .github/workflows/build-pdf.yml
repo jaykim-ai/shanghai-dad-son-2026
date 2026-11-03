@@ -1,0 +1,37 @@
+name: Build Shanghai itinerary PDF
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/build_pdf.py'
+      - 'trip.json'
+      - '.github/workflows/build-pdf.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install ReportLab
+        run: python -m pip install --quiet reportlab
+      - name: Build PDF
+        run: python scripts/build_pdf.py
+      - name: Commit generated PDF
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add shanghai-itinerary-2026.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish updated Shanghai itinerary PDF"
+            git push
+          fi
