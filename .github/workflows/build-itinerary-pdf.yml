@@ -1,0 +1,41 @@
+name: Build printable Shanghai itinerary PDF
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'print.html'
+      - '.github/workflows/build-itinerary-pdf.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Korean fonts and PDF renderer
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk
+          python -m pip install --upgrade pip
+          pip install weasyprint
+      - name: Render itinerary to PDF
+        run: |
+          weasyprint print.html Shanghai_Dad_Son_Itinerary_Nov5-8_2026.pdf
+          test -s Shanghai_Dad_Son_Itinerary_Nov5-8_2026.pdf
+          file Shanghai_Dad_Son_Itinerary_Nov5-8_2026.pdf
+      - name: Publish downloadable PDF
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Shanghai_Dad_Son_Itinerary_Nov5-8_2026.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish downloadable Shanghai father-son itinerary PDF"
+            git push
+          fi
